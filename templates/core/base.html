@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}InvenTrack Pro{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'heading': ['DM Sans', 'sans-serif'],
+                        'body': ['IBM Plex Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        'slate': {
+                            '850': '#1e2433',
+                            '900': '#0f172a',
+                            '950': '#020617',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'IBM Plex Sans', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'DM Sans', sans-serif; }
+        .htmx-indicator { opacity: 0; }
+        .htmx-request .htmx-indicator { opacity: 1; }
+        .htmx-request.htmx-indicator { opacity: 1; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .modal-backdrop { background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+    <div class="flex min-h-screen">
+        {% include 'core/partials/sidebar.html' %}
+
+        <div class="flex-1 flex flex-col ml-0 lg:ml-[280px] transition-all duration-300">
+            {% include 'core/partials/header.html' %}
+
+            <main class="flex-1 p-4 lg:p-8">
+                <div class="max-w-[1600px] mx-auto">
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    {% include 'core/partials/modal.html' %}
+
+    <script>
+        document.addEventListener('htmx:configRequest', (event) => {
+            event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+        });
+
+        htmx.on('#modal', 'htmx:afterSwap', () => {
+            initModals();
+        });
+
+        function initModals() {
+            const modal = document.getElementById('modal');
+            const modalContent = document.getElementById('modal-content');
+
+            window.openModal = function(content, title = 'Modal') {
+                modalContent.innerHTML = content;
+                document.getElementById('modal-title').textContent = title;
+                modal.classList.remove('hidden');
+                setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            };
+
+            window.closeModal = function() {
+                modal.classList.add('opacity-0');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modalContent.innerHTML = '';
+                }, 200);
+            };
+
+            document.querySelectorAll('[data-close-modal]').forEach(btn => {
+                btn.addEventListener('click', closeModal);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initModals);
+
+        let searchTimeout;
+        const searchInput = document.getElementById('products-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('search', e.target.value);
+                    htmx.ajax('GET', url.pathname + '?' + url.searchParams.toString(), {
+                        target: '#main-content',
+                        swapOob: true,
+                    });
+                }, 300);
+            });
+        }
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

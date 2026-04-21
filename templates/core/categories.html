@@ -1,0 +1,79 @@
+{% extends 'core/base.html' %}
+{% block title %}Categories - InvenTrack Pro{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800 font-heading">Categories</h2>
+            <p class="text-slate-500">Manage product categories</p>
+        </div>
+        <button onclick="openModal('{% url 'core:category_create' %}', 'Add New Category')"
+                class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium flex items-center gap-2 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add Category
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for category in categories %}
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background-color: {{ category.color }}20;">
+                        <svg class="w-6 h-6" style="color: {{ category.color }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-800">{{ category.name }}</h3>
+                        <p class="text-sm text-slate-500">{{ category.product_count }} products</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button onclick="openModal('{% url 'core:category_edit' category.id %}', 'Edit Category')"
+                            class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                    </button>
+                    <button onclick="if(confirm('Delete this category?')) { fetch('{% url 'core:category_delete' category.id %}', {method: 'DELETE', headers: {'X-CSRFToken': '{{ csrf_token }}'}}).then(() => location.reload()) }"
+                            class="p-2 hover:bg-red-50 rounded-lg transition-colors">
+                        <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            {% if category.description %}
+            <p class="text-sm text-slate-500 mt-3">{{ category.description }}</p>
+            {% endif %}
+
+            <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-500">Total Stock</p>
+                    <p class="text-lg font-semibold text-slate-800">{{ category.total_stock|default:0 }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500">Value</p>
+                    <p class="text-lg font-semibold text-emerald-600">${{ category.total_stock_value|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
+                <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                </svg>
+                <p class="text-lg font-medium text-slate-700">No categories yet</p>
+                <p class="text-sm text-slate-500 mt-1">Create your first category to organize products</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
